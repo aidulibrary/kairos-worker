@@ -1,0 +1,181 @@
+/* ═══════════════════════════════════════════════════
+   KAIROS · 几之色——设计令牌
+
+   TRAE必须将此文件复制到项目中的 src/app/kairos-tokens.css
+   并在 globals.css 中 @import 它。
+
+   整个项目的所有颜色、间距、字体、动效都由此文件定义。
+   绝不使用此文件之外的视觉参数。
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  /* ═══════════════════════════════════════════════
+     混沌域——万物诞生前
+     ═══════════════════════════════════════════════ */
+  --kairo-void:        oklch(0.07 0.01 270);
+  --kairo-silence:     oklch(0.11 0.01 270);
+  --kairo-between:     oklch(0.15 0.01 270);
+
+  /* ═══════════════════════════════════════════════
+     临界域——将变未变
+     ═══════════════════════════════════════════════ */
+  --kairo-emerging:    oklch(0.20 0.01 270);
+  --kairo-surface:     oklch(0.25 0.01 270);
+
+  /* ═══════════════════════════════════════════════
+     显现域——光已到来
+     ═══════════════════════════════════════════════ */
+  --kairo-glimmer:     oklch(0.78 0.14 75);
+  --kairo-approach:    oklch(0.85 0.15 75);
+  --kairo-presence:    oklch(0.88 0.16 75);
+
+  /* ═══════════════════════════════════════════════
+     余韵域——光退去后的温度
+     ═══════════════════════════════════════════════ */
+  --kairo-ember:       oklch(0.65 0.10 75);
+  --kairo-afterglow:   oklch(0.50 0.08 75);
+
+  /* ═══════════════════════════════════════════════
+     文字域——发声的层次
+     ═══════════════════════════════════════════════ */
+  --kairo-speak:       oklch(0.95 0.00 0);
+  --kairo-whisper:     oklch(0.58 0.01 270);
+  --kairo-murmur:      oklch(0.35 0.01 270);
+
+  /* ═══════════════════════════════════════════════
+     身份色
+     ═══════════════════════════════════════════════ */
+  --kairo-creator:     oklch(0.78 0.14 75);
+  --kairo-arriver:     oklch(0.65 0.12 200);
+  --kairo-descender:   oklch(0.68 0.16 30);
+  --kairo-facilitator: oklch(0.55 0.10 160);
+
+  /* ═══════════════════════════════════════════════
+     文字层级
+     ═══════════════════════════════════════════════ */
+  --text-h0:    72px;
+  --text-h1:    48px;
+  --text-h2:    32px;
+  --text-h3:    24px;
+  --text-body:  16px;
+  --text-small: 13px;
+  --text-micro: 11px;
+
+  /* ═══════════════════════════════════════════════
+     间距
+     ═══════════════════════════════════════════════ */
+  --space-breath:   clamp(1rem, 3vw, 2rem);
+  --space-field:    clamp(2rem, 6vw, 4rem);
+  --space-void:     clamp(4rem, 12vw, 8rem);
+
+  /* ═══════════════════════════════════════════════
+     圆角
+     ═══════════════════════════════════════════════ */
+  --radius-card:    16px;
+  --radius-button:  12px;
+  --radius-input:   16px;
+  --radius-full:    9999px;
+
+  /* ═══════════════════════════════════════════════
+     字体
+     ═══════════════════════════════════════════════ */
+  --font-display:    'Inter', sans-serif;
+  --font-body:       'Inter', sans-serif;
+  --font-chinese-heading: 'Noto Serif SC', serif;
+  --font-chinese-body:    'Noto Sans SC', sans-serif;
+  --font-mono:       'JetBrains Mono', monospace;
+}
+
+/* ═══════════════════════════════════════════════
+   品牌工具类
+   ═══════════════════════════════════════════════ */
+@layer components {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: var(--radius-card);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.03),
+      0 2px 4px rgba(0, 0, 0, 0.12),
+      0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      0 4px 8px rgba(0, 0, 0, 0.16),
+      0 16px 40px rgba(0, 0, 0, 0.24);
+  }
+
+  .field-clearing {
+    padding: var(--space-field);
+  }
+
+  .wind-line {
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--kairo-glimmer) 20%,
+      var(--kairo-glimmer) 80%,
+      transparent
+    );
+    border-radius: var(--radius-full);
+  }
+
+  .token-glow {
+    box-shadow:
+      0 0 12px var(--kairo-glimmer),
+      0 0 24px rgba(232, 185, 74, 0.25);
+  }
+
+  .btn-kairos {
+    background: linear-gradient(
+      135deg,
+      var(--kairo-glimmer),
+      var(--kairo-ember)
+    );
+    color: oklch(0.15 0.02 75);
+    font-weight: 600;
+    border-radius: var(--radius-button);
+    padding: 10px 24px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-kairos:hover {
+    box-shadow: 0 0 20px rgba(232, 185, 74, 0.30);
+    transform: translateY(-1px);
+  }
+
+  .ji-texture {
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--kairo-murmur) 0px,
+      var(--kairo-murmur) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   动效关键帧
+   ═══════════════════════════════════════════════ */
+@keyframes kairos-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.95); }
+  50%      { opacity: 1.0; transform: scale(1.05); }
+}
+
+@keyframes kairos-approach {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kairos-ripple {
+  0%   { box-shadow: 0 0 0 0 rgba(232, 185, 74, 0.4); }
+  100% { box-shadow: 0 0 0 20px rgba(232, 185, 74, 0); }
+}

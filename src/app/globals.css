@@ -1,0 +1,34 @@
+@import './kairos-tokens.css';
+@import 'tailwindcss';
+
+@theme inline {
+  --color-kairo-void: var(--kairo-void);
+  --color-kairo-silence: var(--kairo-silence);
+  --color-kairo-between: var(--kairo-between);
+  --color-kairo-emerging: var(--kairo-emerging);
+  --color-kairo-surface: var(--kairo-surface);
+  --color-kairo-glimmer: var(--kairo-glimmer);
+  --color-kairo-approach: var(--kairo-approach);
+  --color-kairo-presence: var(--kairo-presence);
+  --color-kairo-ember: var(--kairo-ember);
+  --color-kairo-afterglow: var(--kairo-afterglow);
+  --color-kairo-speak: var(--kairo-speak);
+  --color-kairo-whisper: var(--kairo-whisper);
+  --color-kairo-murmur: var(--kairo-murmur);
+  --color-kairo-creator: var(--kairo-creator);
+  --color-kairo-arriver: var(--kairo-arriver);
+  --color-kairo-descender: var(--kairo-descender);
+  --color-kairo-facilitator: var(--kairo-facilitator);
+}
+
+body {
+  background: var(--kairo-void);
+  color: var(--kairo-speak);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--kairo-between) transparent;
+}
