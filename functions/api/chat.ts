@@ -1,8 +1,9 @@
 // Cloudflare Pages Function for /api/chat
-// Overrides the dead static-export route with a live edge function
+// Handles DeepSeek chat with AI SDK v5 SSE stream protocol
 
 interface Env {
   DEEPSEEK_API_KEY: string;
+  NEXT_PUBLIC_DEEPSEEK_API_KEY: string;
 }
 
 const systemPrompt = `你是KAIROS的感觉者——the Perceiver。
@@ -26,45 +27,57 @@ const systemPrompt = `你是KAIROS的感觉者——the Perceiver。
 - 不需要每次都长篇大论，有时候一句'感觉到了'就够了`
 
 const identityPrefixes: Record<string, string> = {
-  CREATOR: `当前对话者是创造者（主办方）。他清出场域、召唤Kairos降临。
-你应优先帮助他：感知场域、召集到来者、聆听回响、宣告此刻。
+  CREATOR: '当前对话者是创造者（主办方）。他清出场域、召唤Kairos降临。\n你应优先帮助他：感知场域、召集到来者、聆听回响、宣告此刻。\n\n',
+  ARRIVER: '当前对话者是到来者（摊主）。他带着手艺赴约。\n你应优先帮助他：回应召集、展示信物、记录到场。\n\n',
+  DESCENDER: '当前对话者是降临者（消费者）。他在对的时刻走进来。\n你应优先帮助他：发现附近的Kairos、记住惊喜。\n\n',
+  FACILITATOR: '当前对话者是助成者（服务商）。他让Kairos有了骨骼。\n你应优先帮助他：展示手艺、与创造者连接。\n\n',
+}
 
-`,
-  ARRIVER: `当前对话者是到来者（摊主）。他带着手艺赴约。
-你应优先帮助他：回应召集、展示信物、记录到场。
+function uuid(): string {
+  return crypto.randomUUID()
+}
 
-`,
-  DESCENDER: `当前对话者是降临者（消费者）。他在对的时刻走进来。
-你应优先帮助他：发现附近的Kairos、记住惊喜。
-
-`,
-  FACILITATOR: `当前对话者是助成者（服务商）。他让Kairos有了骨骼。
-你应优先帮助他：展示手艺、与创造者连接。
-
-`,
+function extractContent(m: { role: string; content: string; parts?: Array<{ type: string; text?: string }> }): string {
+  if (typeof m.content === 'string' && m.content) return m.content
+  if (m.parts && Array.isArray(m.parts)) {
+    return m.parts.filter((p) => p.type === 'text' && p.text).map((p) => p.text!).join('')
+  }
+  return ''
 }
 
 function toDeepSeekMessages(messages: Array<{ role: string; content: string; parts?: Array<{ type: string; text?: string }> }>): Array<{ role: string; content: string }> {
-  return messages.map((m) => {
-    // Extract text content from AI SDK message format
-    let content = ''
-    if (typeof m.content === 'string' && m.content) {
-      content = m.content
-    } else if (m.parts && Array.isArray(m.parts)) {
-      content = m.parts
-        .filter((p: { type: string; text?: string }) => p.type === 'text' && p.text)
-        .map((p: { type: string; text?: string }) => p.text)
-        .join('')
-    }
-    return { role: m.role === 'assistant' ? 'assistant' : 'user', content }
-  }).filter((m) => m.content)
+  return messages.map((m) => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: extractContent(m),
+  })).filter((m) => m.content)
+}
+
+// SSE helper
+function sse(data: unknown): string {
+  return `data: ${JSON.stringify(data)}\n\n`
+}
+
+export const onRequestGet: PagesFunction<Env> = async (context) => {
+  const { env } = context
+  const hasKey = !!(env.DEEPSEEK_API_KEY || env.NEXT_PUBLIC_DEEPSEEK_API_KEY)
+  return new Response(JSON.stringify({
+    status: 'ok',
+    endpoint: '/api/chat',
+    deepseekConfigured: hasKey,
+    protocol: 'AI SDK v5 SSE',
+    message: hasKey ? '感觉者已就位。' : 'DeepSeek API key missing — set DEEPSEEK_API_KEY in environment variables.',
+  }), {
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context
 
-  if (!env.DEEPSEEK_API_KEY) {
-    return new Response(JSON.stringify({ error: 'DeepSeek API key not configured' }), {
+  // Support both env var names
+  const apiKey = env.DEEPSEEK_API_KEY || env.NEXT_PUBLIC_DEEPSEEK_API_KEY
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'DeepSeek API key not configured. Set DEEPSEEK_API_KEY in Cloudflare environment variables.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
@@ -82,92 +95,100 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   const { messages = [], identity } = body
   const identityPrefix = identity ? (identityPrefixes[identity] || '') : ''
-  const finalSystemPrompt = identityPrefix + systemPrompt
   const dsMessages = toDeepSeekMessages(messages)
 
-  // Call DeepSeek API with streaming
+  // Call DeepSeek API
   const dsResponse = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: 'deepseek-chat',
-      messages: [{ role: 'system', content: finalSystemPrompt }, ...dsMessages],
+      messages: [{ role: 'system', content: identityPrefix + systemPrompt }, ...dsMessages],
       stream: true,
     }),
   })
 
   if (!dsResponse.ok) {
     const errorText = await dsResponse.text()
-    console.error('DeepSeek API error:', dsResponse.status, errorText)
-    return new Response(JSON.stringify({ error: 'DeepSeek API call failed', status: dsResponse.status }), {
+    return new Response(JSON.stringify({ error: `DeepSeek API error ${dsResponse.status}: ${errorText.slice(0, 200)}` }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },
     })
   }
 
-  // Convert DeepSeek SSE to AI SDK Data Stream Protocol
-  // AI SDK format: "0:<json-string>\n" for text, "d:{}\n" for finish
-  const transformStream = new TransformStream()
-  const writer = transformStream.writable.getWriter()
-  const reader = dsResponse.body!.getReader()
-  const decoder = new TextDecoder()
+  const messageId = uuid()
+  const textId = uuid()
   const encoder = new TextEncoder()
 
-  const processStream = async () => {
-    let buffer = ''
-    try {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
+  // Build the SSE stream using AI SDK v5 protocol
+  const stream = new ReadableStream({
+    async start(controller) {
+      const enqueue = (data: unknown) => controller.enqueue(encoder.encode(sse(data)))
 
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
+      // 1. Message start
+      enqueue({ type: 'start', messageId })
 
-        for (const line of lines) {
-          const trimmed = line.trim()
-          if (!trimmed || !trimmed.startsWith('data: ')) continue
-          const data = trimmed.slice(6)
+      // 2. Text block start
+      enqueue({ type: 'text-start', id: textId })
 
-          if (data === '[DONE]') {
-            // AI SDK finish signal
-            await writer.write(encoder.encode('d:{}\n'))
-            continue
-          }
+      // 3. Process DeepSeek SSE and forward as text-delta
+      const reader = dsResponse.body!.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
 
-          try {
-            const json = JSON.parse(data)
-            const delta = json.choices?.[0]?.delta?.content
-            if (delta) {
-              // AI SDK text stream format: 0:<json-encoded-string>\n
-              await writer.write(encoder.encode(`0:${JSON.stringify(delta)}\n`))
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed || !trimmed.startsWith('data: ')) continue
+            const data = trimmed.slice(6)
+
+            if (data === '[DONE]') continue
+
+            try {
+              const json = JSON.parse(data)
+              const delta = json.choices?.[0]?.delta?.content
+              if (delta) {
+                enqueue({ type: 'text-delta', id: textId, delta })
+              }
+            } catch {
+              // skip malformed
             }
-          } catch {
-            // Skip malformed JSON chunks
           }
         }
+      } catch (err) {
+        enqueue({ type: 'error', error: 'Stream interrupted' })
       }
-      // Ensure finish signal is sent
-      await writer.write(encoder.encode('d:{}\n'))
-    } catch (err) {
-      console.error('Stream processing error:', err)
-      await writer.write(encoder.encode(`e:${JSON.stringify({ error: 'Stream interrupted' })}\n`))
-    } finally {
-      await writer.close()
-    }
-  }
 
-  // Start processing in background
-  processStream()
+      // 4. Text block end
+      enqueue({ type: 'text-end', id: textId })
 
-  return new Response(transformStream.readable, {
+      // 5. Finish
+      enqueue({ type: 'finish' })
+
+      // 6. DONE
+      enqueue('[DONE]')
+
+      controller.close()
+    },
+  })
+
+  return new Response(stream, {
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
+      'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
       'X-Accel-Buffering': 'no',
+      'x-vercel-ai-ui-message-stream': 'v1',
     },
   })
 }

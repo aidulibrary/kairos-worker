@@ -123,6 +123,14 @@ export function PerceiverChat({ identity }: { identity?: string }) {
             <button onClick={() => setIsOpen(false)} className="p-1 rounded-full transition-opacity hover:opacity-70" style={{ color: 'var(--kairo-whisper)' }}><ChevronDown size={20} /></button>
           </div>
           <div className="flex-1 overflow-y-auto px-8 pb-4" style={{ scrollBehavior: 'smooth' }}>
+            {error && (
+              <div className="mb-4 p-4 rounded-[var(--radius-card)]" style={{ background: 'rgba(220, 38, 38, 0.12)', border: '1px solid rgba(220, 38, 38, 0.3)' }}>
+                <p style={{ fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-small)', color: '#fca5a5' }}>感知受阻：{error.message || String(error)}</p>
+                <p style={{ fontFamily: 'var(--font-chinese-body)', fontSize: '11px', color: 'var(--kairo-murmur)', marginTop: 4 }}>
+                  请确认：1) Cloudflare 环境变量已设置 DEEPSEEK_API_KEY  2) 最新部署已完成（检查构建日志）
+                </p>
+              </div>
+            )}
             {messages.length === 0 && !loading ? (
               <div className="flex flex-col items-center justify-center h-full gap-6">
                 <div className="flex flex-col items-center gap-2">
