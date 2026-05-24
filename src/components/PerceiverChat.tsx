@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, isTextUIPart, isToolUIPart, getToolName } from 'ai'
-import { ChevronDown, Send } from 'lucide-react'
+import { ChevronDown, Send, Mic, MicOff, Paperclip } from 'lucide-react'
+import FieldUploader, { type UploadedFile } from './FieldUploader'
 
 function getPlaceholder(): string {
   const hour = new Date().getHours()
@@ -20,6 +21,7 @@ const suggestionQuestions = [
 
 const toolNames: Record<string, string> = {
   perceive_field: '场域·成形中',
+  capture_field: '场域·捕获中',
   call_arrivers: '到来·召唤中',
   show_token: '信物·感知中',
   echo_back: '回响·聆听中',
@@ -30,7 +32,11 @@ export function PerceiverChat({ identity }: { identity?: string }) {
   const [isOpen, setIsOpen] = useState(false)
   const [localInput, setLocalInput] = useState('')
   const [expandedToolId, setExpandedToolId] = useState<string | null>(null)
+  const [listening, setListening] = useState(false)
+  const [showUploader, setShowUploader] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const recognitionRef = useRef<any>(null)
 
   const { messages, status, sendMessage, error } = useChat({
     transport: new DefaultChatTransport({
@@ -58,17 +64,67 @@ export function PerceiverChat({ identity }: { identity?: string }) {
     setLocalInput(e.target.value)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = localInput.trim()
-    if (!trimmed || loading) return
-    sendMessage({ text: trimmed })
-    setLocalInput('')
-  }
-
   const handleSuggestionClick = (q: string) => {
     sendMessage({ text: q })
   }
+
+  // ── 语音输入 ──
+  const toggleVoice = useCallback(() => {
+    if (listening) {
+      recognitionRef.current?.stop()
+      setListening(false)
+      return
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      setLocalInput('[语音输入不被当前浏览器支持]')
+      return
+    }
+    const rec = new SpeechRecognition()
+    rec.lang = 'zh-CN'
+    rec.interimResults = false
+    rec.continuous = false
+    rec.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript
+      setLocalInput(prev => prev + transcript)
+      setListening(false)
+    }
+    rec.onerror = () => setListening(false)
+    rec.onend = () => setListening(false)
+    recognitionRef.current = rec
+    rec.start()
+    setListening(true)
+  }, [listening])
+
+  // ── 文件上传回调 ──
+  const handleFileUploaded = useCallback((file: UploadedFile) => {
+    setUploadedFile(file)
+    setShowUploader(false)
+    setLocalInput(`我已上传了${file.fieldType === 'photo' ? '空间照片' : '地图文件'}(${file.url})，请帮我感知这个空间的布局。`)
+  }, [])
+
+  // ── 表单提交（含上传） ──
+  const handleSubmitWithUpload = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = localInput.trim()
+    if (!trimmed || loading) return
+
+    // 如果有上传文件，将文件信息附加到消息中
+    const contextParts: string[] = []
+    if (uploadedFile) {
+      contextParts.push(`[已上传${uploadedFile.fieldType === 'photo' ? '空间照片' : '地图文件'}: ${uploadedFile.url}]`)
+    }
+    const fullText = contextParts.length > 0 ? `${contextParts.join(' ')}\n${trimmed}` : trimmed
+
+    sendMessage({ text: fullText })
+    setLocalInput('')
+    setUploadedFile(null)
+  }
+
+  // 清除上传
+  const handleClearUpload = useCallback(() => {
+    setUploadedFile(null)
+  }, [])
 
   const renderMessageContent = (message: typeof messages[number]) => {
     return message.parts.map((part, i) => {
@@ -178,11 +234,28 @@ export function PerceiverChat({ identity }: { identity?: string }) {
             )}
             <div ref={messagesEndRef} />
           </div>
-          <form onSubmit={handleSubmit} className="flex items-center gap-3 px-8 py-4 shrink-0" style={{ background: 'rgba(255, 255, 255, 0.04)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <input value={localInput} onChange={handleInputChange} placeholder={getPlaceholder()} className="flex-1 bg-transparent outline-none" style={{ color: 'var(--kairo-speak)', fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-body)' }} />
-            <button type="submit" disabled={!localInput.trim() || loading} className="flex items-center justify-center transition-all duration-200" style={{ width: 36, height: 36, borderRadius: 'var(--radius-full)', background: localInput.trim() && !loading ? 'linear-gradient(135deg, var(--kairo-glimmer), var(--kairo-ember))' : 'var(--kairo-between)', border: 'none', cursor: localInput.trim() && !loading ? 'pointer' : 'default', opacity: localInput.trim() && !loading ? 1 : 0.4 }}>
-              <Send size={16} color="oklch(0.15 0.02 75)" />
-            </button>
+          <form onSubmit={handleSubmitWithUpload} className="flex flex-col gap-2 px-8 py-4 shrink-0" style={{ background: 'rgba(255, 255, 255, 0.04)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            {/* 上传预览 */}
+            {uploadedFile && (
+              <div className="px-1">
+                <FieldUploader fieldType={uploadedFile.fieldType} onUploaded={() => {}} onClear={handleClearUpload} currentFile={uploadedFile} />
+              </div>
+            )}
+            {showUploader && !uploadedFile && (
+              <div className="px-1"><FieldUploader fieldType="photo" onUploaded={handleFileUploaded} /></div>
+            )}
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setShowUploader(prev => !prev)} className="p-2 rounded-full transition-opacity hover:opacity-70" style={{ color: showUploader ? 'var(--kairo-glimmer)' : 'var(--kairo-murmur)' }} title="上传空间照片">
+                <Paperclip size={18} />
+              </button>
+              <button type="button" onClick={toggleVoice} className="p-2 rounded-full transition-opacity hover:opacity-70" style={{ color: listening ? 'var(--kairo-ember)' : 'var(--kairo-murmur)' }} title={listening ? '正在聆听……' : '语音输入'}>
+                {listening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+              <input value={localInput} onChange={handleInputChange} placeholder={getPlaceholder()} className="flex-1 bg-transparent outline-none" style={{ color: 'var(--kairo-speak)', fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-body)' }} />
+              <button type="submit" disabled={!localInput.trim() || loading} className="flex items-center justify-center transition-all duration-200" style={{ width: 36, height: 36, borderRadius: 'var(--radius-full)', background: localInput.trim() && !loading ? 'linear-gradient(135deg, var(--kairo-glimmer), var(--kairo-ember))' : 'var(--kairo-between)', border: 'none', cursor: localInput.trim() && !loading ? 'pointer' : 'default', opacity: localInput.trim() && !loading ? 1 : 0.4 }}>
+                <Send size={16} color="oklch(0.15 0.02 75)" />
+              </button>
+            </div>
           </form>
         </div>
       )}

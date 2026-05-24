@@ -1,17 +1,18 @@
 import { WindLine } from '@/components/WindLine'
 import { GlassCard } from '@/components/GlassCard'
 import { TokenBadge } from '@/components/TokenBadge'
+import FieldCanvas from '@/components/FieldCanvas'
 import db from '@/lib/db'
 import type { Market } from '@/lib/data'
 
 export async function generateStaticParams() {
-  const markets = await db.findMany('market', { select: { id: true } })
+  const markets = await db.market.findMany({ select: { id: true } })
   return (markets as Array<{ id: string }>).map((m) => ({ id: m.id }))
 }
 
 export default async function MarketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const market = (await db.findUnique('market', {
+  const market = (await db.market.findUnique({
     where: { id },
     include: { creator: true, booths: { include: { vendor: { include: { user: true } } } } },
   }) as unknown as Market | null)
@@ -58,25 +59,20 @@ export default async function MarketDetailPage({ params }: { params: Promise<{ i
         {/* ── 场域布局 ── */}
         <div className="flex flex-col flex-1 gap-4">
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 600, color: 'var(--kairo-speak)' }}>场域</h2>
-          <GlassCard className="p-6">
-            <div className="flex flex-col gap-4">
-              {booths.slice(0, 8).map((b, i) => {
-                const isOccupied = b.status === 'occupied'
-                const hasVendor = !!b.vendorId
-                return (
-                  <div key={b.id || i} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: isOccupied ? 'rgba(232,185,74,0.06)' : 'transparent', border: `1px solid ${isOccupied ? 'var(--kairo-glimmer)' : 'var(--kairo-emerging)'}` }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 600, color: isOccupied ? 'var(--kairo-glimmer)' : 'var(--kairo-murmur)', minWidth: 40 }}>{b.number}</span>
-                    <span style={{ fontFamily: 'var(--font-chinese-body)', fontSize: '13px', color: hasVendor ? 'var(--kairo-speak)' : 'var(--kairo-murmur)', flex: 1 }}>
-                      {hasVendor ? (b.vendor?.user?.name || '同行者') : (b.status === 'reserved' ? '已预留' : '空位——等待到来')}
-                    </span>
-                    {hasVendor && b.vendor && (
-                      <TokenBadge level={b.vendor?.user?.tokenLevel as 'WALKER' | 'CRAFTER' | 'MASTER' | 'FLAMEKEEPER' || 'WALKER'} size="sm" />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </GlassCard>
+          <FieldCanvas
+            booths={booths.map(b => ({
+              id: b.id,
+              number: b.number,
+              x: b.positionX,
+              y: b.positionY,
+              width: b.width,
+              height: b.height,
+              status: b.status as 'occupied' | 'reserved' | 'available',
+              vendorName: b.vendor?.user?.name,
+              vendorCategory: b.vendor?.category,
+              hasPower: b.hasPower,
+            }))}
+          />
         </div>
 
         {/* ── 谁将到来 ── */}

@@ -6,7 +6,7 @@ import db from '@/lib/db'
 import type { Market } from '@/lib/data'
 
 export default async function CreatorPage() {
-  const markets = await db.findMany('market', {
+  const markets = await db.market.findMany({
     where: { status: { in: ['draft', 'published'] } },
     include: { creator: true, booths: { include: { vendor: { include: { user: true } } } } },
     orderBy: { createdAt: 'desc' },

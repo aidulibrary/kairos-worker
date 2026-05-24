@@ -1,4 +1,3 @@
-export const dynamic = "force-static"
 import { deepseek } from '@ai-sdk/deepseek'
 import { streamText, tool, generateText, jsonSchema, stepCountIs } from 'ai'
 import prisma from '@/lib/db'
@@ -26,15 +25,190 @@ export async function POST(req: Request) {
     stopWhen: stepCountIs(8),
     tools: {
       perceive_field: tool({
-        description: '为市集生成场地布局方案。',
-        inputSchema: jsonSchema({ type: 'object', properties: { location: { type: 'string' }, boothCount: { type: 'number' }, style: { type: 'string' } }, required: ['boothCount', 'style'], additionalProperties: false }),
-        execute: async ({ boothCount, style, location }) => {
+        description: '为市集生成场地布局方案并保存到数据库。需要提供marketId来关联市集。',
+        inputSchema: jsonSchema({
+          type: 'object',
+          properties: {
+            marketId: { type: 'string', description: '市集ID，来自declare_kairos返回的id或现有市集' },
+            boothCount: { type: 'number', description: '摊位数量' },
+            style: { type: 'string', enum: ['grid', 'circle', 'scatter'], description: '布局风格' },
+          },
+          required: ['marketId', 'boothCount', 'style'],
+          additionalProperties: false,
+        }),
+        execute: async ({ marketId, boothCount, style }) => {
+          const market = await prisma.market.findUnique({ where: { id: marketId } })
+          if (!market) return { error: '市集未找到，请先 declare_kairos 创建市集。' }
+
           const booths: { x: number; y: number; label: string }[] = []
-          if (style === 'grid') { const cols = 5; for (let i = 0; i < boothCount; i++) booths.push({ x: 50 + (i % cols) * 160, y: 60 + Math.floor(i / cols) * 140, label: `${i + 1}号位` }) }
-          else if (style === 'circle') { const radius = boothCount * 24; for (let i = 0; i < boothCount; i++) { const angle = (2 * Math.PI * i) / boothCount - Math.PI / 2; booths.push({ x: Math.round(Math.cos(angle) * radius + 400), y: Math.round(Math.sin(angle) * radius + 300), label: `${i + 1}号位` }) } }
-          else { const rng = (seed: number) => { let s = seed; return () => { s = (s * 16807) % 2147483647; return s / 2147483647 } }; const rand = rng(boothCount); const placed: { x: number; y: number }[] = []; let attempts = 0; while (placed.length < boothCount && attempts < 500) { const x = Math.round(rand() * 700 + 50); const y = Math.round(rand() * 450 + 50); if (!placed.some((p) => Math.hypot(p.x - x, p.y - y) < 120)) { placed.push({ x, y }); booths.push({ x, y, label: `${placed.length}号位` }) } attempts++ } }
-          const fieldName = location || '此处'; const gridDesc = style === 'grid' ? `${fieldName}上${boothCount}个摊位整齐排列如棋局。` : style === 'circle' ? `${fieldName}上${boothCount}个摊位环抱如圆。` : `${fieldName}上${boothCount}个摊位散落如星辰。`
-          return { style, boothCount, booths, description: gridDesc }
+          if (style === 'grid') {
+            const cols = Math.min(5, Math.ceil(Math.sqrt(boothCount)))
+            for (let i = 0; i < boothCount; i++)
+              booths.push({ x: 50 + (i % cols) * 160, y: 60 + Math.floor(i / cols) * 140, label: `${i + 1}号位` })
+          } else if (style === 'circle') {
+            const radius = Math.max(boothCount * 24, 80)
+            const cx = 400, cy = 260
+            for (let i = 0; i < boothCount; i++) {
+              const angle = (2 * Math.PI * i) / boothCount - Math.PI / 2
+              booths.push({ x: Math.round(Math.cos(angle) * radius + cx), y: Math.round(Math.sin(angle) * radius + cy), label: `${i + 1}号位` })
+            }
+          } else {
+            const rng = (seed: number) => { let s = seed; return () => { s = (s * 16807) % 2147483647; return s / 2147483647 } }
+            const rand = rng(boothCount)
+            const placed: { x: number; y: number }[] = []
+            let attempts = 0
+            while (placed.length < boothCount && attempts < 500) {
+              const x = Math.round(rand() * 650 + 50)
+              const y = Math.round(rand() * 400 + 50)
+              if (!placed.some(p => Math.hypot(p.x - x, p.y - y) < 100)) {
+                placed.push({ x, y })
+                booths.push({ x, y, label: `${placed.length}号位` })
+              }
+              attempts++
+            }
+          }
+
+          // 先清除旧摊位，再写入新布局
+          await prisma.booth.deleteMany({ where: { marketId } })
+          const created = []
+          for (const b of booths) {
+            const booth = await prisma.booth.create({
+              data: {
+                marketId,
+                number: b.label,
+                positionX: b.x,
+                positionY: b.y,
+                width: 120,
+                height: 100,
+                hasPower: b.label.includes('1') || b.label.includes('2'),
+                status: 'available',
+              },
+            })
+            created.push({ id: booth.id, number: b.label, x: b.x, y: b.y })
+          }
+
+          await prisma.market.update({ where: { id: marketId }, data: { boothCount, layout: style } })
+
+          const styleDesc = style === 'grid' ? '整齐排列如棋局' : style === 'circle' ? '环抱如圆' : '散落如星辰'
+          return {
+            marketId,
+            style,
+            boothCount,
+            layoutSaved: created.length,
+            booths: created,
+            description: `${market.name}, 场上${boothCount}个摊位${styleDesc}。已保存到「${market.name}」场域。`,
+          }
+        },
+      }),
+      capture_field: tool({
+        description: '从上传的空间照片或文字描述中捕获场地布局。用户上传了照片/地图后，或描述了空间形状后调用。会自动识别空间轮廓并生成摊位坐标。',
+        inputSchema: jsonSchema({
+          type: 'object',
+          properties: {
+            marketId: { type: 'string', description: '关联的市集ID' },
+            imageUrl: { type: 'string', description: '上传的照片URL，来自FieldUploader' },
+            description: { type: 'string', description: '用户对空间的文字描述，如"L形院子左边有棵树"' },
+            boothCount: { type: 'number', description: '摊位数量' },
+          },
+          required: ['description', 'boothCount'],
+          additionalProperties: false,
+        }),
+        execute: async ({ marketId, imageUrl, description, boothCount }) => {
+          // 从描述中提取空间特征
+          const desc = description.toLowerCase()
+          let shape: 'rectangle' | 'l_shape' | 'u_shape' | 'circle' | 'corridor' = 'rectangle'
+          if (desc.includes('l形') || desc.includes('l型') || desc.includes('L形')) shape = 'l_shape'
+          else if (desc.includes('u形') || desc.includes('u型') || desc.includes('回') || desc.includes('凹')) shape = 'u_shape'
+          else if (desc.includes('圆') || desc.includes('环') || desc.includes('绕')) shape = 'circle'
+          else if (desc.includes('廊') || desc.includes('道') || desc.includes('巷') || desc.includes('长条')) shape = 'corridor'
+
+          // 根据形状生成摊位坐标
+          const booths: { x: number; y: number; label: string }[] = []
+          const canvasW = 800, canvasH = 500
+
+          switch (shape) {
+            case 'rectangle': {
+              const cols = Math.min(5, Math.ceil(Math.sqrt(boothCount)))
+              const ox = (canvasW - cols * 160) / 2
+              const oy = (canvasH - Math.ceil(boothCount / cols) * 130) / 2
+              for (let i = 0; i < boothCount; i++)
+                booths.push({ x: ox + (i % cols) * 160, y: oy + Math.floor(i / cols) * 130, label: `${i + 1}号位` })
+              break
+            }
+            case 'l_shape': {
+              const half = Math.floor(boothCount / 2)
+              for (let i = 0; i < half; i++)
+                booths.push({ x: 60, y: 60 + i * 100, label: `${i + 1}号位` })
+              for (let i = 0; i < boothCount - half; i++)
+                booths.push({ x: 200 + i * 130, y: canvasH - 160, label: `${half + i + 1}号位` })
+              break
+            }
+            case 'u_shape': {
+              const third = Math.floor(boothCount / 3)
+              for (let i = 0; i < third; i++)
+                booths.push({ x: 60, y: 60 + i * 90, label: `${i + 1}号位` })
+              for (let i = 0; i < third; i++)
+                booths.push({ x: 120 + i * 130, y: canvasH - 160, label: `${third + i + 1}号位` })
+              for (let i = 0; i < boothCount - 2 * third; i++)
+                booths.push({ x: canvasW - 180, y: 60 + i * 90, label: `${2 * third + i + 1}号位` })
+              break
+            }
+            case 'circle': {
+              const radius = Math.max(boothCount * 22, 80)
+              const cx = canvasW / 2, cy = canvasH / 2
+              for (let i = 0; i < boothCount; i++) {
+                const angle = (2 * Math.PI * i) / boothCount - Math.PI / 2
+                booths.push({ x: Math.round(Math.cos(angle) * radius + cx - 60), y: Math.round(Math.sin(angle) * radius + cy - 50), label: `${i + 1}号位` })
+              }
+              break
+            }
+            case 'corridor': {
+              const gap = Math.min(110, Math.floor((canvasW - 100) / boothCount))
+              for (let i = 0; i < boothCount; i++)
+                booths.push({ x: 50 + i * gap, y: (canvasH - 100) / 2, label: `${i + 1}号位` })
+              break
+            }
+          }
+
+          // 如果有marketId，保存到数据库
+          let savedCount = 0
+          if (marketId) {
+            const market = await prisma.market.findUnique({ where: { id: marketId } })
+            if (market) {
+              await prisma.booth.deleteMany({ where: { marketId } })
+              for (const b of booths) {
+                await prisma.booth.create({
+                  data: {
+                    marketId,
+                    number: b.label,
+                    positionX: b.x,
+                    positionY: b.y,
+                    width: 120,
+                    height: 100,
+                    hasPower: parseInt(b.label) <= 2,
+                    status: 'available',
+                  },
+                })
+              }
+              await prisma.market.update({ where: { id: marketId }, data: { boothCount, layout: shape } })
+              savedCount = booths.length
+            }
+          }
+
+          const shapeNames: Record<string, string> = {
+            rectangle: '方正布局', l_shape: 'L形转角', u_shape: 'U形环抱', circle: '环形围绕', corridor: '廊道排列',
+          }
+
+          return {
+            shape,
+            shapeName: shapeNames[shape],
+            imageAnalyzed: !!imageUrl,
+            boothCount,
+            layoutSaved: savedCount,
+            savedToMarket: marketId || null,
+            booths,
+            description: `从「${description}」中感知到了${shapeNames[shape]}的空间。${boothCount}个摊位已成形${marketId ? '并保存' : ''}。${imageUrl ? '照片已作为场域参考。' : ''}`,
+          }
         },
       }),
       call_arrivers: tool({

@@ -224,6 +224,27 @@ const db = {
       if (args?.include) items = resolveInclude(items, args.include)
       return clone(items)
     },
+    create: async (args: { data: Partial<Booth> & { marketId: string; number: string; positionX: number; positionY: number; width: number; height: number; status: string; hasPower?: boolean } }) => {
+      const b: Booth = {
+        id: uid(),
+        marketId: args.data.marketId,
+        vendorId: args.data.vendorId || null,
+        number: args.data.number,
+        positionX: args.data.positionX,
+        positionY: args.data.positionY,
+        width: args.data.width || 120,
+        height: args.data.height || 100,
+        hasPower: args.data.hasPower ?? false,
+        status: args.data.status || 'available',
+      }
+      store.booths.push(b)
+      return clone(b)
+    },
+    deleteMany: async (args: { where: Obj }) => {
+      const before = store.booths.length
+      store.booths = store.booths.filter(b => !matchOne(b as unknown as Obj, args.where))
+      return { count: before - store.booths.length }
+    },
   },
 
   plazaPost: {
