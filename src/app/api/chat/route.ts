@@ -1,3 +1,4 @@
+export const dynamic = "force-static"
 import { deepseek } from '@ai-sdk/deepseek'
 import { streamText, tool, generateText, jsonSchema, stepCountIs } from 'ai'
 import prisma from '@/lib/db'

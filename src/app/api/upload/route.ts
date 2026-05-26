@@ -1,3 +1,4 @@
+export const dynamic = "force-static"
 // KAIROS 文件上传接口 — 支持照片和地图文件
 import { NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
