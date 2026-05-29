@@ -3,6 +3,7 @@ import { inter, notoSansSC, notoSerifSC, jetbrainsMono } from "@/lib/fonts"
 import { Logo } from "@/components/Logo"
 import { NavLinks } from "@/components/NavLinks"
 import { WindLine } from "@/components/WindLine"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default function RootLayout({
           <NavLinks />
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <div
               className="w-8 h-8 rounded-full"
               style={{

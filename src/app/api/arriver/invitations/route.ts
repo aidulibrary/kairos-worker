@@ -1,5 +1,4 @@
-export const dynamic = "force-static"
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
 export async function GET(request: Request) {
@@ -14,5 +13,18 @@ export async function GET(request: Request) {
     return NextResponse.json(invitations)
   } catch {
     return NextResponse.json([])
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { boothId, status } = await req.json()
+    const booth = await prisma.booth.update({
+      where: { id: boothId },
+      data: { status, vendorId: status === 'available' ? null : undefined },
+    })
+    return NextResponse.json(booth)
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 })
   }
 }

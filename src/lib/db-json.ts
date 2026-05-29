@@ -176,6 +176,26 @@ const db = {
       if (args?.include) items = resolveInclude(items, args.include)
       return clone(items)
     },
+    create: async (args: { data: Partial<Vendor> & { userId: string; category: string } }) => {
+      const v: Vendor = {
+        id: uid(), userId: args.data.userId, category: args.data.category,
+        style: args.data.style || null, priceRange: args.data.priceRange || null,
+        city: args.data.city || null, description: args.data.description || null,
+        logo: args.data.logo || null, creditScore: args.data.creditScore || 60,
+        expoCount: args.data.expoCount || 0, goodRate: args.data.goodRate || 0.8,
+        violations: args.data.violations || 0, complaints: args.data.complaints || 0,
+        createdAt: now(), updatedAt: now(),
+      }
+      store.vendors.push(v)
+      return clone(v)
+    },
+    update: async (args: { where: Obj; data: Partial<Vendor> }) => {
+      const items = matchWhere(store.vendors as unknown as Obj[], args.where)
+      if (items.length === 0) throw new Error('摊主未找到')
+      const idx = store.vendors.findIndex(v => v.id === items[0].id)
+      Object.assign(store.vendors[idx], args.data, { updatedAt: now() })
+      return clone(store.vendors[idx])
+    },
   },
 
   service: {
@@ -196,6 +216,21 @@ const db = {
       const idx = store.services.findIndex(s => s.id === items[0].id)
       Object.assign(store.services[idx], args.data, { updatedAt: now() })
       return clone(store.services[idx])
+    },
+    create: async (args: { data: Partial<Service> & { userId: string; category: string } }) => {
+      const s: Service = {
+        id: uid(), userId: args.data.userId, category: args.data.category,
+        description: args.data.description || null, credentialUrl: args.data.credentialUrl || null,
+        projectCount: args.data.projectCount || 0, rating: args.data.rating || 0,
+        createdAt: now(), updatedAt: now(),
+      }
+      store.services.push(s)
+      return clone(s)
+    },
+    delete: async (args: { where: Obj }) => {
+      const before = store.services.length
+      store.services = store.services.filter(s => !matchOne(s as unknown as Obj, args.where))
+      return { count: before - store.services.length }
     },
   },
 
@@ -221,13 +256,29 @@ const db = {
       Object.assign(store.markets[idx], args.data, { updatedAt: now() })
       return clone(store.markets[idx])
     },
+    create: async (args: { data: Partial<Market> & { creatorId: string; name: string; location: string; date: string; boothCount: number } }) => {
+      const m: Market = {
+        id: uid(), creatorId: args.data.creatorId, name: args.data.name,
+        location: args.data.location, date: args.data.date, boothCount: args.data.boothCount,
+        description: args.data.description || null, layout: args.data.layout || null,
+        status: args.data.status || 'draft', createdAt: now(), updatedAt: now(),
+      }
+      store.markets.push(m)
+      return clone(m)
+    },
+    delete: async (args: { where: Obj }) => {
+      const before = store.markets.length
+      store.markets = store.markets.filter(m => !matchOne(m as unknown as Obj, args.where))
+      return { count: before - store.markets.length }
+    },
   },
 
   booth: {
-    findMany: async (args?: { where?: Obj; include?: Obj; orderBy?: Obj }) => {
+    findMany: async (args?: { where?: Obj; include?: Obj; orderBy?: Obj; take?: number }) => {
       let items = [...store.booths] as unknown as Obj[]
       if (args?.where) items = matchWhere(items, args.where)
       if (args?.orderBy) items = applyOrderBy(items, args.orderBy)
+      if (args?.take) items = items.slice(0, args.take)
       if (args?.include) items = resolveInclude(items, args.include)
       return clone(items)
     },
@@ -251,6 +302,13 @@ const db = {
       const before = store.booths.length
       store.booths = store.booths.filter(b => !matchOne(b as unknown as Obj, args.where))
       return { count: before - store.booths.length }
+    },
+    update: async (args: { where: Obj; data: Partial<Booth> }) => {
+      const items = matchWhere(store.booths as unknown as Obj[], args.where)
+      if (items.length === 0) throw new Error('摊位未找到')
+      const idx = store.booths.findIndex(b => b.id === items[0].id)
+      Object.assign(store.booths[idx], args.data)
+      return clone(store.booths[idx])
     },
   },
 

@@ -110,10 +110,10 @@ const now = '2026-05-18T00:00:00.000Z'
 
 const store: Store = {
   users: [
-    { id: 'u-seed-1', phone: '13800000001', name: '创世创造者', identity: 'CREATOR', tokenLevel: 'FLAMEKEEPER', tokenScore: 500, verifiedAt: now, createdAt: now, updatedAt: now },
-    { id: 'u-seed-2', phone: '13800000002', name: '风信到来者', identity: 'ARRIVER', tokenLevel: 'MASTER', tokenScore: 320, verifiedAt: now, createdAt: now, updatedAt: now },
-    { id: 'u-seed-3', phone: '13800000003', name: '游历降临者', identity: 'DESCENDER', tokenLevel: 'WALKER', tokenScore: 45, verifiedAt: now, createdAt: now, updatedAt: now },
-    { id: 'u-seed-4', phone: '13800000004', name: '巧手助成者', identity: 'FACILITATOR', tokenLevel: 'CRAFTER', tokenScore: 180, verifiedAt: now, createdAt: now, updatedAt: now },
+    { id: 'u-seed-1', phone: '13800000001', name: '创世主创', identity: 'CREATOR', tokenLevel: 'FLAMEKEEPER', tokenScore: 500, verifiedAt: now, createdAt: now, updatedAt: now },
+    { id: 'u-seed-2', phone: '13800000002', name: '风信主理人', identity: 'ARRIVER', tokenLevel: 'MASTER', tokenScore: 320, verifiedAt: now, createdAt: now, updatedAt: now },
+    { id: 'u-seed-3', phone: '13800000003', name: '游历赶集人', identity: 'DESCENDER', tokenLevel: 'WALKER', tokenScore: 45, verifiedAt: now, createdAt: now, updatedAt: now },
+    { id: 'u-seed-4', phone: '13800000004', name: '巧手共建人', identity: 'FACILITATOR', tokenLevel: 'CRAFTER', tokenScore: 180, verifiedAt: now, createdAt: now, updatedAt: now },
   ],
   vendors: [
     { id: 'v-seed-1', userId: 'u-seed-2', category: '手工', style: '极简', priceRange: '50-200', city: '北京', description: '用风与火锻造信物', logo: null, creditScore: 92, expoCount: 8, goodRate: 0.95, violations: 0, complaints: 0, createdAt: now, updatedAt: now },

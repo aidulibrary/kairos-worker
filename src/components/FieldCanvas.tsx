@@ -1,15 +1,10 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
-// Konva must be dynamically imported — no DOM on server
-const Stage = dynamic(() => import('react-konva').then(m => m.Stage), { ssr: false })
-const Layer = dynamic(() => import('react-konva').then(m => m.Layer), { ssr: false })
-const Rect = dynamic(() => import('react-konva').then(m => m.Rect), { ssr: false })
-const Text = dynamic(() => import('react-konva').then(m => m.Text), { ssr: false })
-const Group = dynamic(() => import('react-konva').then(m => m.Group), { ssr: false })
-const Line = dynamic(() => import('react-konva').then(m => m.Line), { ssr: false })
+// 整个 Konva 树作为一个整体动态加载——保持父子 context 链不断
+const KonvaField = dynamic(() => import('./KonvaField'), { ssr: false })
 
 /* ── 类型 ── */
 export interface BoothData {
@@ -32,131 +27,14 @@ export interface FieldCanvasProps {
   editable?: boolean
   onBoothMove?: (id: string, x: number, y: number) => void
   onBoothClick?: (id: string) => void
-}
-
-/* ── 颜色映射 ── */
-const STATUS_COLORS = {
-  occupied: {
-    fill: 'rgba(232,185,74,0.15)',
-    stroke: 'rgba(232,185,74,0.9)',
-    text: '#f0c850',
-    label: '已占据',
-  },
-  reserved: {
-    fill: 'rgba(94,194,162,0.15)',
-    stroke: 'rgba(94,194,162,0.8)',
-    text: '#5ec2a2',
-    label: '已预留',
-  },
-  available: {
-    fill: 'rgba(255,255,255,0.06)',
-    stroke: 'rgba(255,255,255,0.25)',
-    text: 'rgba(255,255,255,0.55)',
-    label: '空位',
-  },
-}
-
-/* ── 单个摊位 ── */
-function BoothRect({
-  data,
-  editable,
-  onDragEnd,
-  onClick,
-}: {
-  data: BoothData
-  editable: boolean
-  onDragEnd?: (id: string, x: number, y: number) => void
-  onClick?: (id: string) => void
-}) {
-  const colors = STATUS_COLORS[data.status]
-  const [hovered, setHovered] = useState(false)
-
-  return (
-    <Group
-      x={data.x}
-      y={data.y}
-      draggable={editable}
-      onDragEnd={(e: any) => {
-        onDragEnd?.(data.id, Math.round(e.target.x()), Math.round(e.target.y()))
-      }}
-      onClick={() => onClick?.(data.id)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* 摊位矩形 */}
-      <Rect
-        width={data.width}
-        height={data.height}
-        fill={hovered ? colors.fill.replace('0.15', '0.30').replace('0.06', '0.15') : colors.fill}
-        stroke={hovered ? colors.text : colors.stroke}
-        strokeWidth={hovered ? 2 : 1}
-        cornerRadius={6}
-        shadowColor={hovered ? colors.text : 'transparent'}
-        shadowBlur={hovered ? 12 : 0}
-        shadowOpacity={0.3}
-      />
-      {/* 摊位编号 */}
-      <Text
-        text={data.number}
-        x={8}
-        y={8}
-        fontSize={11}
-        fontFamily="var(--font-mono), monospace"
-        fontStyle="bold"
-        fill={colors.text}
-      />
-      {/* 状态/摊主名 */}
-      <Text
-        text={data.vendorName || colors.label}
-        x={8}
-        y={24}
-        fontSize={10}
-        fontFamily="var(--font-chinese-body), sans-serif"
-        fill={data.vendorName ? colors.text : colors.text}
-        opacity={data.vendorName ? 0.85 : 0.5}
-      />
-      {/* 类别 */}
-      {data.vendorCategory && (
-        <Text
-          text={data.vendorCategory}
-          x={8}
-          y={38}
-          fontSize={9}
-          fontFamily="var(--font-chinese-body), sans-serif"
-          fill={colors.text}
-          opacity={0.45}
-        />
-      )}
-      {/* 电力标识 */}
-      {data.hasPower && (
-        <Text
-          text="⚡"
-          x={data.width - 18}
-          y={6}
-          fontSize={10}
-        />
-      )}
-    </Group>
-  )
-}
-
-/* ── 网格背景 ── */
-function GridBackground({ w, h }: { w: number; h: number }) {
-  const gap = 40
-  const lines: React.ReactNode[] = []
-  // vertical
-  for (let x = gap; x < w; x += gap) {
-    lines.push(
-      <Line key={`v-${x}`} points={[x, 0, x, h]} stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} />
-    )
+  collab?: {
+    online: boolean
+    peers: number
+    lockedBooths: Set<string>
+    onDragStart: (id: string) => void
+    onDragMove: (id: string, x: number, y: number) => void
+    onDragEnd: (id: string, x: number, y: number) => void
   }
-  // horizontal
-  for (let y = gap; y < h; y += gap) {
-    lines.push(
-      <Line key={`h-${y}`} points={[0, y, w, y]} stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} />
-    )
-  }
-  return <>{lines}</>
 }
 
 /* ── 主组件 ── */
@@ -167,18 +45,19 @@ export default function FieldCanvas({
   editable = true,
   onBoothMove,
   onBoothClick,
+  collab,
 }: FieldCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ w: width, h: height })
-  const [konvaReady, setKonvaReady] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   // 响应式尺寸
   useEffect(() => {
-    setKonvaReady(true)
+    setMounted(true)
     const container = containerRef.current
     if (!container) return
 
-    const observer = new ResizeObserver(entries => {
+    const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = Math.floor(entry.contentRect.width)
         if (w > 0) setCanvasSize({ w, h: Math.max(400, Math.round(w * 0.55)) })
@@ -188,17 +67,10 @@ export default function FieldCanvas({
     return () => observer.disconnect()
   }, [])
 
-  const handleDragEnd = useCallback(
-    (id: string, x: number, y: number) => {
-      onBoothMove?.(id, x, y)
-    },
-    [onBoothMove]
-  )
-
   // 统计
-  const occupied = booths.filter(b => b.status === 'occupied').length
-  const reserved = booths.filter(b => b.status === 'reserved').length
-  const available = booths.filter(b => b.status === 'available').length
+  const occupied = booths.filter((b) => b.status === 'occupied').length
+  const reserved = booths.filter((b) => b.status === 'reserved').length
+  const available = booths.filter((b) => b.status === 'available').length
 
   return (
     <div className="flex flex-col gap-3">
@@ -224,32 +96,16 @@ export default function FieldCanvas({
           minHeight: 400,
         }}
       >
-        {konvaReady && (
-          <Stage width={canvasSize.w} height={canvasSize.h}>
-            <Layer>
-              <GridBackground w={canvasSize.w} h={canvasSize.h} />
-              {booths.map(booth => (
-                <BoothRect
-                  key={booth.id}
-                  data={booth}
-                  editable={editable}
-                  onDragEnd={handleDragEnd}
-                  onClick={onBoothClick}
-                />
-              ))}
-              {/* 空场域提示 */}
-              {booths.length === 0 && (
-                <Text
-                  text="场域空空——从感觉者对话中感知布局，或上传空间照片"
-                  x={canvasSize.w / 2 - 180}
-                  y={canvasSize.h / 2 - 10}
-                  fontSize={14}
-                  fontFamily="var(--font-chinese-body), sans-serif"
-                  fill="rgba(255,255,255,0.2)"
-                />
-              )}
-            </Layer>
-          </Stage>
+        {mounted && (
+          <KonvaField
+            booths={booths}
+            width={canvasSize.w}
+            height={canvasSize.h}
+            editable={editable}
+            onBoothMove={onBoothMove}
+            onBoothClick={onBoothClick}
+            collab={collab}
+          />
         )}
       </div>
     </div>

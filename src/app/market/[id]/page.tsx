@@ -1,13 +1,14 @@
 import { WindLine } from '@/components/WindLine'
 import { GlassCard } from '@/components/GlassCard'
 import { TokenBadge } from '@/components/TokenBadge'
-import FieldCanvas from '@/components/FieldCanvas'
+import MarketCanvas from '@/components/MarketCanvas'
+import { SharedConversation } from '@/components/SharedConversation'
 import db from '@/lib/db'
 import type { Market } from '@/lib/data'
 
 export async function generateStaticParams() {
-  const markets = await db.market.findMany({ select: { id: true } })
-  return (markets as Array<{ id: string }>).map((m) => ({ id: m.id }))
+  const markets = await db.market.findMany({}) as { id: string }[]
+  return markets.map((m) => ({ id: m.id }))
 }
 
 export default async function MarketDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -44,7 +45,7 @@ export default async function MarketDetailPage({ params }: { params: Promise<{ i
         </div>
         <button className="px-6 py-3 rounded-[var(--radius-button)] transition-all duration-200 hover:-translate-y-[2px]"
           style={{ background: 'linear-gradient(135deg, var(--kairo-glimmer), var(--kairo-ember))', color: 'oklch(0.15 0.02 75)', fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-body)', fontWeight: 600 }}>
-          召唤到来者
+          召唤主理人
         </button>
       </div>
 
@@ -59,7 +60,8 @@ export default async function MarketDetailPage({ params }: { params: Promise<{ i
         {/* ── 场域布局 ── */}
         <div className="flex flex-col flex-1 gap-4">
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 600, color: 'var(--kairo-speak)' }}>场域</h2>
-          <FieldCanvas
+          <MarketCanvas
+            marketId={market.id}
             booths={booths.map(b => ({
               id: b.id,
               number: b.number,
@@ -97,6 +99,8 @@ export default async function MarketDetailPage({ params }: { params: Promise<{ i
           </div>
         </div>
       </div>
+
+      <SharedConversation marketId={market.id} />
     </div>
   )
 }

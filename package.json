@@ -6,13 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ws": "node server/ws-server.js",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:push": "drizzle-kit push",
+    "deploy": "pnpm build && npx wrangler deploy"
   },
   "dependencies": {
     "@ai-sdk/deepseek": "^1",
     "@ai-sdk/react": "^3.0.186",
+    "@aws-sdk/client-s3": "^3",
+    "@better-auth/drizzle-adapter": "latest",
+    "@libsql/client": "^0.17",
     "ai": "^5.0.188",
+    "better-auth": "latest",
     "clsx": "^2",
+    "drizzle-orm": "^0.45",
     "konva": "^9",
     "lucide-react": "^0",
     "motion": "^12",
@@ -22,6 +31,9 @@
     "react-konva": "^18",
     "tailwind-merge": "^3",
     "uuid": "^11",
+    "ws": "^8",
+    "y-websocket": "latest",
+    "yjs": "latest",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -30,9 +42,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10",
+    "@opennextjs/cloudflare": "latest",
+    "drizzle-kit": "latest",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
+    "tsx": "latest",
     "typescript": "^5"
   }
 }

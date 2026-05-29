@@ -1,0 +1,220 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/auth/[...all]",
+      "regex": "^/api/auth/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPall": "nxtPall"
+      },
+      "namedRegex": "^/api/auth/(?<nxtPall>.+?)(?:/)?$"
+    },
+    {
+      "page": "/api/descender/market/[id]",
+      "regex": "^/api/descender/market/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/descender/market/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/market/[id]",
+      "regex": "^/market/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/market/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/api/arriver/history",
+      "regex": "^/api/arriver/history(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/arriver/history(?:/)?$"
+    },
+    {
+      "page": "/api/arriver/invitations",
+      "regex": "^/api/arriver/invitations(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/arriver/invitations(?:/)?$"
+    },
+    {
+      "page": "/api/arriver/profile",
+      "regex": "^/api/arriver/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/arriver/profile(?:/)?$"
+    },
+    {
+      "page": "/api/auth/register",
+      "regex": "^/api/auth/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/register(?:/)?$"
+    },
+    {
+      "page": "/api/auth/send-code",
+      "regex": "^/api/auth/send\\-code(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/auth/send\\-code(?:/)?$"
+    },
+    {
+      "page": "/api/chat",
+      "regex": "^/api/chat(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/chat(?:/)?$"
+    },
+    {
+      "page": "/api/creator/markets",
+      "regex": "^/api/creator/markets(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/creator/markets(?:/)?$"
+    },
+    {
+      "page": "/api/descender/nearby",
+      "regex": "^/api/descender/nearby(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/descender/nearby(?:/)?$"
+    },
+    {
+      "page": "/api/descender/reserve",
+      "regex": "^/api/descender/reserve(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/descender/reserve(?:/)?$"
+    },
+    {
+      "page": "/api/facilitator/profile",
+      "regex": "^/api/facilitator/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/facilitator/profile(?:/)?$"
+    },
+    {
+      "page": "/api/facilitator/services",
+      "regex": "^/api/facilitator/services(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/facilitator/services(?:/)?$"
+    },
+    {
+      "page": "/api/plaza/forum",
+      "regex": "^/api/plaza/forum(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/plaza/forum(?:/)?$"
+    },
+    {
+      "page": "/api/plaza/lanterns",
+      "regex": "^/api/plaza/lanterns(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/plaza/lanterns(?:/)?$"
+    },
+    {
+      "page": "/api/plaza/memoirs",
+      "regex": "^/api/plaza/memoirs(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/plaza/memoirs(?:/)?$"
+    },
+    {
+      "page": "/api/plaza/posts",
+      "regex": "^/api/plaza/posts(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/plaza/posts(?:/)?$"
+    },
+    {
+      "page": "/api/plaza/wind",
+      "regex": "^/api/plaza/wind(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/plaza/wind(?:/)?$"
+    },
+    {
+      "page": "/api/upload",
+      "regex": "^/api/upload(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/upload(?:/)?$"
+    },
+    {
+      "page": "/arriver",
+      "regex": "^/arriver(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/arriver(?:/)?$"
+    },
+    {
+      "page": "/auth",
+      "regex": "^/auth(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth(?:/)?$"
+    },
+    {
+      "page": "/creator",
+      "regex": "^/creator(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/creator(?:/)?$"
+    },
+    {
+      "page": "/descender",
+      "regex": "^/descender(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/descender(?:/)?$"
+    },
+    {
+      "page": "/facilitator",
+      "regex": "^/facilitator(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/facilitator(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

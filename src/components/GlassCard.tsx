@@ -3,12 +3,15 @@ import type { ReactNode } from 'react'
 interface GlassCardProps {
   children: ReactNode
   className?: string
+  style?: React.CSSProperties
+  onClick?: React.MouseEventHandler<HTMLDivElement>
 }
 
-export function GlassCard({ children, className = '' }: GlassCardProps) {
+export function GlassCard({ children, className = '', style, onClick }: GlassCardProps) {
   return (
-    <div
+      <div
       className={className}
+      onClick={onClick}
       style={{
         background: 'rgba(255, 255, 255, 0.06)',
         backdropFilter: 'blur(16px) saturate(180%)',
@@ -17,6 +20,7 @@ export function GlassCard({ children, className = '' }: GlassCardProps) {
         borderRadius: 'var(--radius-card)',
         boxShadow:
           '0 0 0 1px rgba(255, 255, 255, 0.03), 0 2px 4px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.18)',
+        ...style,
       }}
     >
       {children}

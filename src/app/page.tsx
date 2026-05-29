@@ -151,7 +151,7 @@ export default async function PlazaPage() {
         ) : (
           <GlassCard className="flex flex-col items-center justify-center py-16 gap-3">
             <p className="text-center" style={{ fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-body)', color: 'var(--kairo-whisper)', lineHeight: 1.7 }}>还没有灯火被传下来。</p>
-            <p className="text-center" style={{ fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-small)', color: 'var(--kairo-murmur)', lineHeight: 1.6 }}>当第一个创造者分享他的Kairos时，这里将被点亮。</p>
+            <p className="text-center" style={{ fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-small)', color: 'var(--kairo-murmur)', lineHeight: 1.6 }}>当第一个主创分享他的Kairos时，这里将被点亮。</p>
           </GlassCard>
         )}
       </section>

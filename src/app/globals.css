@@ -93,3 +93,32 @@ body {
   background-size: 200% 100%;
   animation: kairos-shimmer 3s ease-in-out infinite;
 }
+
+/* ─── 浅色主题 ─── */
+[data-theme="light"] {
+  --kairo-void: oklch(0.97 0.01 90);
+  --kairo-silence: oklch(0.93 0.02 85);
+  --kairo-between: oklch(0.88 0.03 85);
+  --kairo-emerging: oklch(0.80 0.04 80);
+  --kairo-surface: oklch(0.95 0.01 90);
+  --kairo-speak: oklch(0.15 0.02 75);
+  --kairo-whisper: oklch(0.35 0.03 80);
+  --kairo-murmur: oklch(0.50 0.03 85);
+  --kairo-glimmer: oklch(0.55 0.15 75);
+  --kairo-approach: oklch(0.65 0.10 200);
+  --kairo-presence: oklch(0.60 0.12 160);
+  --kairo-ember: oklch(0.50 0.18 45);
+  --kairo-afterglow: oklch(0.75 0.08 70);
+  --kairo-creator: oklch(0.50 0.18 50);
+  --kairo-arriver: oklch(0.55 0.12 220);
+  --kairo-descender: oklch(0.60 0.15 160);
+  --kairo-facilitator: oklch(0.50 0.12 180);
+  color-scheme: light;
+}
+[data-theme="light"] body {
+  background: var(--kairo-void);
+}
+[data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
+  background: oklch(0.93 0.02 85) !important;
+  color: oklch(0.15 0.02 75) !important;
+}

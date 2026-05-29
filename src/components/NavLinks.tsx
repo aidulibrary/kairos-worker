@@ -12,10 +12,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/', label: '广场', icon: MessagesSquare },
-  { href: '/creator', label: '创造室', icon: PenLine },
-  { href: '/arriver', label: '来者坊', icon: Store },
-  { href: '/descender', label: '降临径', icon: Compass },
-  { href: '/facilitator', label: '助成廊', icon: Wrench },
+  { href: '/creator', label: '主创室', icon: PenLine },
+  { href: '/arriver', label: '主理坊', icon: Store },
+  { href: '/descender', label: '赶集径', icon: Compass },
+  { href: '/facilitator', label: '共建廊', icon: Wrench },
 ]
 
 export function NavLinks() {
