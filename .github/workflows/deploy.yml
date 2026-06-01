@@ -22,16 +22,10 @@ jobs:
 
       - run: pnpm install
 
+      - run: npm install -g wrangler
+
       - run: npx @opennextjs/cloudflare build
 
-      - run: |
-          echo "=== Checking wrangler ==="
-          pnpm exec wrangler --version
-          echo "=== Checking wrangler.toml ==="
-          cat wrangler.toml
-          echo "=== Checking .open-next ==="
-          ls -la .open-next/
-          echo "=== Deploying ==="
-          pnpm exec wrangler deploy
+      - run: wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
