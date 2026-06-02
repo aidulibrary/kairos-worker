@@ -6,9 +6,10 @@ import { SharedConversation } from '@/components/SharedConversation'
 import db from '@/lib/db'
 import type { Market } from '@/lib/data'
 
+export const dynamicParams = true
+
 export async function generateStaticParams() {
-  const markets = await db.market.findMany({}) as { id: string }[]
-  return markets.map((m) => ({ id: m.id }))
+  return [] // 构建时不预生成，运行时动态渲染
 }
 
 export default async function MarketDetailPage({ params }: { params: Promise<{ id: string }> }) {
