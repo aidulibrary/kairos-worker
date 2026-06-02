@@ -2,33 +2,38 @@ import { drizzle } from 'drizzle-orm/d1'
 import * as schema from './schema'
 
 // Cloudflare Workers D1-only 版本
-// @libsql/client 已彻底移除（不兼容 Workers 运行时）
-// 本地开发用 wrangler dev --remote 测试 D1
+// @libsql/client 已移除（不兼容 Workers 运行时）
 
-function getDb(env?: any) {
-  // 优先从 getCloudflareContext 获取（OpenNext 环境）
+let _db: ReturnType<typeof drizzle> | null = null
+
+function resolveDb(): ReturnType<typeof drizzle> {
+  if (_db) return _db
+
+  // 1. getCloudflareContext（OpenNext 环境）
   try {
     const { getCloudflareContext } = require('@opennextjs/cloudflare')
     const ctx = getCloudflareContext()
-    if (ctx?.env?.DB) return drizzle(ctx.env.DB, { schema })
+    if (ctx?.env?.DB) {
+      _db = drizzle(ctx.env.DB, { schema })
+      return _db
+    }
   } catch {}
 
-  // 回退：从参数 env 获取（原生 Worker fetch handler）
-  if (env?.DB) return drizzle(env.DB, { schema })
+  // 2. globalThis（原生 Worker / wrangler dev）
+  if ((globalThis as any).DB) {
+    _db = drizzle((globalThis as any).DB, { schema })
+    return _db
+  }
 
-  // 本地 dev：wrangler 注入的 globalThis
-  if ((globalThis as any).DB) return drizzle((globalThis as any).DB, { schema })
-
-  throw new Error('D1 binding "DB" not found. Ensure D1 is bound in wrangler.toml and Cloudflare Dashboard.')
+  throw new Error('D1 binding "DB" not found')
 }
 
-// 延迟创建，避免启动时调用 getCloudflareContext 导致循环依赖
-let _db: ReturnType<typeof drizzle> | null = null
-export function getDatabase(env?: any) {
-  if (!_db) _db = getDb(env)
-  return _db
-}
+// Proxy: 每次访问 db.xxx() 时才解析 D1 绑定
+// 避免模块加载时 getCloudflareContext 不可用的时序问题
+export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+  get(_, prop) {
+    return (resolveDb() as any)[prop]
+  },
+})
 
-// 兼容旧的 import { db } 用法（自动检测）
-export const db = getDatabase()
 export * from './schema'
