@@ -2,9 +2,9 @@
 # wrangler.toml — Cloudflare 的边缘计算平台配置文件
 
 name = "kairos-worker"
+main = ".open-next/worker.js"
 compatibility_date = "2025-05-28"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".open-next"
 assets = { directory = ".open-next/assets" }
 
 # ── D1 数据库（SQLite 边缘数据库） ──
