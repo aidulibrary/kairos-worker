@@ -24,21 +24,22 @@ function resolveDb(): ReturnType<typeof drizzle> {
   return createMockDb()
 }
 
-// 递归 Mock：兼容 Drizzle ORM 链式调用
-// db.select().from().where().all() 或 db.table.findMany({})
+// 递归 Mock：支持 Drizzle ORM 完整链式调用
+// db.select().from(table).where().all() ← 无限链式，最终返回空数组
 function createMockDb(): any {
-  const mock: any = new Proxy(function () { return mock }, {
+  const mockFn = function () { return mockFn }
+  const handler: ProxyHandler<typeof mockFn> = {
     get(_target, prop) {
-      if (prop === 'then') return undefined       // 防止被误判为 Promise
-      if (prop === Symbol.iterator) return function* () { }  // 支持 for...of
-      if (prop === 'toJSON') return () => ({})    // 序列化
-      return mock  // 所有属性/方法都返回自身，支持无限链式
+      if (prop === 'then') return undefined
+      if (prop === Symbol.iterator) return function* () {}
+      if (prop === Symbol.toPrimitive) return () => ''
+      return mockFn
     },
-    apply() {
-      return []  // 函数调用返回空数组
+    apply(_target, _thisArg, _args) {
+      return mockFn
     },
-  })
-  return mock
+  }
+  return new Proxy(mockFn, handler)
 }
 
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {
