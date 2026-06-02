@@ -16,7 +16,6 @@
     "@ai-sdk/deepseek": "^1",
     "@ai-sdk/react": "^3.0.186",
     "@aws-sdk/client-s3": "^3",
-    "@better-auth/drizzle-adapter": "latest",
     "ai": "^5.0.188",
     "better-auth": "latest",
     "clsx": "^2",
