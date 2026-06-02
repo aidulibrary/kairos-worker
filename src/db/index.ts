@@ -1,42 +1,34 @@
-import { drizzle as drizzleD1 } from 'drizzle-orm/d1'
-import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql'
-import { createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/d1'
 import * as schema from './schema'
 
-// 定义 D1 数据库类型
-type D1Database = any
+// Cloudflare Workers D1-only 版本
+// @libsql/client 已彻底移除（不兼容 Workers 运行时）
+// 本地开发用 wrangler dev --remote 测试 D1
 
-// 获取 D1 绑定（兼容 OpenNext 和原生 Worker 环境）
-function getD1Binding(): D1Database | null {
-  // 方法 1: 通过 @opennextjs/cloudflare 的 context
+function getDb(env?: any) {
+  // 优先从 getCloudflareContext 获取（OpenNext 环境）
   try {
     const { getCloudflareContext } = require('@opennextjs/cloudflare')
     const ctx = getCloudflareContext()
-    if (ctx?.env?.DB) return ctx.env.DB
+    if (ctx?.env?.DB) return drizzle(ctx.env.DB, { schema })
   } catch {}
 
-  // 方法 2: 通过 globalThis 直接访问
-  try {
-    if ((globalThis as any).DB) return (globalThis as any).DB
-  } catch {}
+  // 回退：从参数 env 获取（原生 Worker fetch handler）
+  if (env?.DB) return drizzle(env.DB, { schema })
 
-  return null
+  // 本地 dev：wrangler 注入的 globalThis
+  if ((globalThis as any).DB) return drizzle((globalThis as any).DB, { schema })
+
+  throw new Error('D1 binding "DB" not found. Ensure D1 is bound in wrangler.toml and Cloudflare Dashboard.')
 }
 
-// 创建数据库连接
-function createDb() {
-  const d1 = getD1Binding()
-  if (d1) {
-    // Cloudflare Workers 环境：使用 D1
-    return drizzleD1(d1, { schema })
-  }
-
-  // 本地开发环境：使用 libsql (SQLite 文件)
-  const c = createClient({
-    url: process.env.DATABASE_URL || 'file:./kairos.db',
-  })
-  return drizzleLibsql(c, { schema })
+// 延迟创建，避免启动时调用 getCloudflareContext 导致循环依赖
+let _db: ReturnType<typeof drizzle> | null = null
+export function getDatabase(env?: any) {
+  if (!_db) _db = getDb(env)
+  return _db
 }
 
-export const db = createDb()
+// 兼容旧的 import { db } 用法（自动检测）
+export const db = getDatabase()
 export * from './schema'
