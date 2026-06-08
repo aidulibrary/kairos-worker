@@ -35,3 +35,4 @@ BETTER_AUTH_URL = "https://kairos.礼字号.中国"
 # ── 日志 ──
 [observability]
 enabled = true
+routes = [ { pattern = "kairos.礼字号.中国/*" } ]
