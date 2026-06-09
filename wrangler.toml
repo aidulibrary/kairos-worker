@@ -32,7 +32,9 @@ BETTER_AUTH_URL = "https://kairos.礼字号.中国"
 # Cloudflare Pages 默认使用全球 CDN，包括国内京东云/移动节点
 # 无需额外配置，访问速度约 50-200ms
 
+# ── 路由（顶级配置：指定哪些 URL 触发此 Worker） ──
+routes = [ { pattern = "kairos.礼字号.中国/*", zone_name = "礼字号.中国" } ]
+
 # ── 日志 ──
 [observability]
 enabled = true
-routes = [ { pattern = "kairos.礼字号.中国/*" } ]
