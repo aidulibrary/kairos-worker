@@ -17,7 +17,7 @@
     "@ai-sdk/react": "^3.0.186",
     "@aws-sdk/client-s3": "^3",
     "ai": "^5.0.188",
-    "better-auth": "latest",
+    "better-auth": "*",
     "clsx": "^2",
     "drizzle-orm": "^0.45",
     "konva": "^9",
@@ -30,8 +30,8 @@
     "tailwind-merge": "^3",
     "uuid": "^11",
     "ws": "^8",
-    "y-websocket": "latest",
-    "yjs": "latest",
+    "y-websocket": "*",
+    "yjs": "*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -40,12 +40,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10",
-    "@opennextjs/cloudflare": "latest",
-    "drizzle-kit": "latest",
+    "@opennextjs/cloudflare": "*",
+    "drizzle-kit": "*",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
-    "tsx": "latest",
+    "tsx": "*",
     "typescript": "^5"
   }
 }
