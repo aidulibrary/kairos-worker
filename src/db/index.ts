@@ -25,20 +25,20 @@ function resolveDb(): ReturnType<typeof drizzle> {
 }
 
 function createMockDb(): any {
-  let proxy: any
-  const handler: ProxyHandler<() => any> = {
-    get(_target, prop) {
+  const emptyArray = Object.freeze([]) as any
+
+  const handler: ProxyHandler<any> = {
+    get(_, prop) {
       if (prop === 'then') return undefined
-      if (prop === Symbol.iterator) return function* () {}
-      return proxy
+      if (typeof prop === 'symbol') return undefined
+      return new Proxy(() => {}, handler)
     },
     apply() {
-      return proxy  // 返回 proxied 版本，不是原始函数
+      return Promise.resolve(emptyArray)
     },
   }
-  const mockFn = function () { return proxy }
-  proxy = new Proxy(mockFn, handler)
-  return proxy
+
+  return new Proxy(() => {}, handler)
 }
 
 export const db = new Proxy({} as ReturnType<typeof drizzle>, {

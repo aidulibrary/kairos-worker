@@ -14,6 +14,9 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npx @opennextjs/cloudflare build
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'dev-secret-do-not-use-in-production' }}
+          BETTER_AUTH_URL: https://kairos.礼字号.中国
       - name: Deploy to Cloudflare
         run: npx wrangler deploy
         env:
