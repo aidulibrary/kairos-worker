@@ -21,7 +21,7 @@ bucket_name = "kairos-uploads"
 
 # ── 环境变量 ──
 [vars]
-NODE_VERSION = "18"
+NODE_VERSION = "20"
 DEEPSEEK_API_KEY = "sk-e75f3b6c471c4f979bf8dd61fd99c1da"  # ← 部署时填入你的 DeepSeek API Key
 R2_PUBLIC_URL = "https://pub-125ff6c969c14c20b888e94db8e2979a.r2.dev"
 NEXTJS_MODE = "production"
