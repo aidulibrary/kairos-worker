@@ -3,7 +3,7 @@
 
 name = "kairos-worker"
 main = ".open-next/worker.js"
-compatibility_date = "2025-05-28"
+compatibility_date = "2025-06-15"
 compatibility_flags = ["nodejs_compat"]
 assets = { directory = ".open-next/assets" }
 
@@ -11,21 +11,22 @@ assets = { directory = ".open-next/assets" }
 [[d1_databases]]
 binding = "DB"
 database_name = "kairos-db"
-database_id = "440535b5-dfb3-4ac7-83e8-0893ce5811f7"  # ← 部署时替换
+database_id = "440535b5-dfb3-4ac7-83e8-0893ce5811f7"
 
 # ── R2 文件存储（对象存储，替代 S3） ──
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "kairos-uploads"
-# R2 桶不需要预先创建 database_id
 
 # ── 环境变量 ──
+# ⚠️ 密钥已迁移至 wrangler secrets，不再明文存储在 wrangler.toml
+# 本地设置: npx wrangler secret put DEEPSEEK_API_KEY
+# 本地设置: npx wrangler secret put BETTER_AUTH_SECRET
+# CI 设置: GitHub Secrets → DEEPSEEK_API_KEY / BETTER_AUTH_SECRET
 [vars]
 NODE_VERSION = "20"
-DEEPSEEK_API_KEY = "sk-e75f3b6c471c4f979bf8dd61fd99c1da"  # ← 部署时填入你的 DeepSeek API Key
 R2_PUBLIC_URL = "https://pub-125ff6c969c14c20b888e94db8e2979a.r2.dev"
 NEXTJS_MODE = "production"
-BETTER_AUTH_SECRET = "69VrLUz2YObWnY2aQWTrNLpEEvss6JJQjpyhszDSSUo="
 BETTER_AUTH_URL = "https://kairos.礼字号.中国"
 
 # ── 国内加速：启用 Cloudflare 京东云节点 ──

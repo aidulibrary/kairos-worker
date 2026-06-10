@@ -29,12 +29,12 @@ function createMockDb(): any {
 
   const handler: ProxyHandler<any> = {
     get(_, prop) {
-      if (prop === 'then') return undefined
+      if (prop === 'then') return (resolve: any) => resolve(emptyArray)
       if (typeof prop === 'symbol') return undefined
       return new Proxy(() => {}, handler)
     },
     apply() {
-      return Promise.resolve(emptyArray)
+      return new Proxy(() => {}, handler)
     },
   }
 
