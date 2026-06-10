@@ -1,22 +1,30 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { WindLine } from '@/components/WindLine'
 import { GlassCard } from '@/components/GlassCard'
 import { PerceiverChat } from '@/components/PerceiverChat'
 import { Edit3, Star } from 'lucide-react'
+import { useAuth } from '@/lib/session'
 
 export default function FacilitatorPage() {
+  const router = useRouter()
+  const { user, loading } = useAuth()
   const [services, setServices] = useState<any[]>([])
   const [editing, setEditing] = useState<string | null>(null)
   const [form, setForm] = useState({ description: '', category: '' })
 
   const load = async () => {
-    const res = await fetch('/api/facilitator/profile?userId=u-seed-4')
+    if (!user) return
+    const res = await fetch(`/api/facilitator/profile?userId=${user.id}`)
     if (res.ok) setServices([await res.json()])
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [user])
+
+  if (loading) return <div className="flex flex-col items-center justify-center flex-1"><p style={{ fontFamily: 'var(--font-chinese-body)', color: 'var(--kairo-whisper)' }}>正在感知...</p></div>
+  if (!user) { router.push('/auth'); return null }
 
   const startEdit = (s: any) => {
     setEditing(s.id)

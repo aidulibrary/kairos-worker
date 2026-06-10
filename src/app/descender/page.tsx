@@ -1,15 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { WindLine } from '@/components/WindLine'
 import { GlassCard } from '@/components/GlassCard'
 import { PerceiverChat } from '@/components/PerceiverChat'
 import { MapPin } from 'lucide-react'
+import { useUserId } from '@/lib/session'
 
 export default function DescenderPage() {
+  const router = useRouter()
   const [markets, setMarkets] = useState<any[]>([])
   const [city, setCity] = useState('')
   const [reserving, setReserving] = useState<string | null>(null)
+  const userId = useUserId()
 
   const load = async () => {
     const url = city ? `/api/descender/nearby?city=${encodeURIComponent(city)}` : '/api/descender/nearby'
@@ -23,11 +27,12 @@ export default function DescenderPage() {
   useEffect(() => { load() }, [city])
 
   const reserve = async (marketId: string) => {
+    if (!userId) { router.push('/auth'); return }
     setReserving(marketId)
     await fetch('/api/descender/reserve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ marketId, userId: 'u-seed-3' }),
+      body: JSON.stringify({ marketId, userId }),
     })
     setReserving(null)
     alert('预约已发出——等待主创确认。')

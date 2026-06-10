@@ -4,6 +4,7 @@ import { Logo } from "@/components/Logo"
 import { NavLinks } from "@/components/NavLinks"
 import { WindLine } from "@/components/WindLine"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { AuthProvider } from "@/lib/session"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -59,7 +60,9 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="flex-1">{children}</main>
+        <AuthProvider>
+          <main className="flex-1">{children}</main>
+        </AuthProvider>
 
         <footer className="py-6 flex flex-col items-center gap-3">
           <WindLine />

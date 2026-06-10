@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { WindLine } from '@/components/WindLine'
 import { GlassCard } from '@/components/GlassCard'
 import { TokenBadge } from '@/components/TokenBadge'
 import { PerceiverChat } from '@/components/PerceiverChat'
 import { Plus, X, Edit3, Trash2 } from 'lucide-react'
+import { useAuth } from '@/lib/session'
 
 interface Market {
   id: string; name: string; location: string; date: string
@@ -15,6 +17,8 @@ interface Market {
 }
 
 export default function CreatorPage() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const [markets, setMarkets] = useState<Market[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Market | null>(null)
@@ -27,6 +31,9 @@ export default function CreatorPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  if (authLoading) return <div className="flex flex-col items-center justify-center flex-1"><p style={{ fontFamily: 'var(--font-chinese-body)', color: 'var(--kairo-whisper)' }}>正在感知...</p></div>
+  if (!user) { router.push('/auth'); return null }
 
   const openCreate = () => { setEditing(null); setForm({ name: '', location: '', date: '', boothCount: 4, description: '' }); setShowForm(true) }
   const openEdit = (m: Market) => { setEditing(m); setForm({ name: m.name, location: m.location, date: m.date, boothCount: m.boothCount, description: m.description || '' }); setShowForm(true) }

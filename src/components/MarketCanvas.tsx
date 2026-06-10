@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import FieldCanvas from '@/components/FieldCanvas'
 import type { BoothData } from '@/components/FieldCanvas'
 import { useYjsCollaboration } from '@/hooks/useYjsCollaboration'
+import { useUserId } from '@/lib/session'
 
 interface MarketCanvasProps {
   marketId: string
@@ -11,7 +12,7 @@ interface MarketCanvasProps {
 }
 
 export default function MarketCanvas({ marketId, booths: initialBooths }: MarketCanvasProps) {
-  const userId = 'u-seed-1' // TODO: 替换为真实用户ID
+  const userId = useUserId() || 'anon'
   const [lockedBooths, setLockedBooths] = useState<Set<string>>(new Set())
 
   const {

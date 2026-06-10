@@ -1,20 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { WindLine } from '@/components/WindLine'
 import { GlassCard } from '@/components/GlassCard'
 import { TokenBadge } from '@/components/TokenBadge'
 import { TokenDetail } from '@/components/TokenDetail'
 import { PerceiverChat } from '@/components/PerceiverChat'
 import { Edit3, Check, X } from 'lucide-react'
+import { useAuth } from '@/lib/session'
 
 export default function ArriverPage() {
+  const router = useRouter()
+  const { user, loading } = useAuth()
   const [vendor, setVendor] = useState<any>(null)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ description: '', category: '', city: '' })
 
   const load = async () => {
-    const res = await fetch('/api/arriver/profile?userId=u-seed-2')
+    if (!user) return
+    const res = await fetch(`/api/arriver/profile?userId=${user.id}`)
     if (res.ok) {
       const data = await res.json()
       const v = data.vendor || data
@@ -23,13 +28,16 @@ export default function ArriverPage() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [user])
+
+  if (loading) return <div className="flex flex-col items-center justify-center flex-1"><p style={{ fontFamily: 'var(--font-chinese-body)', color: 'var(--kairo-whisper)' }}>正在感知...</p></div>
+  if (!user) { router.push('/auth'); return null }
 
   const saveProfile = async () => {
     await fetch('/api/arriver/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: 'u-seed-2', ...form }),
+      body: JSON.stringify({ userId: user.id, ...form }),
     })
     setEditing(false)
     await load()
