@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `KairosUser` (
 	`createdAt` text NOT NULL,
 	`updatedAt` text NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS `KairosUser_phone_unique` ON `KairosUser` (`phone`);
+CREATE UNIQUE INDEX IF NOT EXISTS `KairosUser_phone_identity_unique` ON `KairosUser` (`phone`, `identity`);
 
 CREATE TABLE IF NOT EXISTS `Market` (
 	`id` text PRIMARY KEY NOT NULL,

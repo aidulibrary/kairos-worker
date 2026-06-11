@@ -7,9 +7,21 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { phone, name, identity, extras } = body
 
-    const user = await prisma.user.create({
-      data: { phone, name, identity, tokenScore: 0, tokenLevel: 'WANDERER' },
+    const existing = await prisma.user.findUnique({
+      where: { phone, identity },
     })
+
+    let user: any
+    if (existing) {
+      user = await prisma.user.update({
+        where: { id: existing.id },
+        data: { name },
+      })
+    } else {
+      user = await prisma.user.create({
+        data: { phone, name, identity, tokenScore: 0, tokenLevel: 'WANDERER' },
+      })
+    }
 
     if (identity === 'ARRIVER' && extras) {
       await prisma.vendor.create({
