@@ -42,7 +42,7 @@ export function RegisterForm({ identity, identityLabel, onBack }: RegisterFormPr
     try {
       const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, name, identity, extras }) })
       if (res.ok) { const spaceMap: Record<string, string> = { CREATOR: '/creator', ARRIVER: '/arriver', DESCENDER: '/descender', FACILITATOR: '/facilitator' }; router.push(spaceMap[identity] || '/') }
-      else { setError('注册未成功，请再试一次') }
+      else { const data = await res.json().catch(() => ({})); setError(data.detail || data.error || '注册未成功，请再试一次') }
     } catch { setError('网络好像不太对，请再试一次') }
     setSubmitting(false)
   }
