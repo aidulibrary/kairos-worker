@@ -39,7 +39,7 @@ export function PerceiverChat({ identity }: { identity?: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
 
-  const { messages, status, sendMessage, error } = useChat({
+  const { messages, status, sendMessage, error, reload } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
       body: identity ? { identity } : undefined,
@@ -193,6 +193,13 @@ export function PerceiverChat({ identity }: { identity?: string }) {
                 <p style={{ fontFamily: 'var(--font-chinese-body)', fontSize: '11px', color: 'var(--kairo-murmur)', marginTop: 4 }}>
                   请确认：1) Cloudflare 环境变量已设置 DEEPSEEK_API_KEY  2) 最新部署已完成（检查构建日志）
                 </p>
+                <button
+                  onClick={() => reload()}
+                  className="mt-3 px-4 py-2 rounded-[var(--radius-button)] transition-all duration-200"
+                  style={{ background: 'var(--kairo-glimmer)', color: 'oklch(0.15 0.02 75)', fontFamily: 'var(--font-chinese-body)', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                >
+                  再次尝试
+                </button>
               </div>
             )}
             {messages.length === 0 && !loading ? (
@@ -234,8 +241,12 @@ export function PerceiverChat({ identity }: { identity?: string }) {
                   </div>
                 )}
                 {error && (
-                  <div className="flex justify-center">
-                    <span style={{ fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-small)', color: 'var(--kairo-ember)' }}>风似乎遇到了阻碍……再试试看。</span>
+                  <div className="flex flex-col items-center gap-2">
+                    <span style={{ fontFamily: 'var(--font-chinese-body)', fontSize: 'var(--text-small)', color: 'var(--kairo-ember)' }}>风似乎遇到了阻碍……</span>
+                    <button onClick={() => reload()} className="px-4 py-2 rounded-[var(--radius-button)]"
+                      style={{ background: 'var(--kairo-glimmer)', color: 'oklch(0.15 0.02 75)', fontFamily: 'var(--font-chinese-body)', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                      再试试看
+                    </button>
                   </div>
                 )}
               </div>

@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import prisma from '@/lib/db'
 
 export async function POST(req: Request) {
   try {
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('kairos_user')?.value
+    if (!userId) return NextResponse.json({ error: '需要先走进来' }, { status: 401 })
+
     const body = await req.json()
-    const { userId, type, content, relatedMarketId } = body
+    const { type, content, relatedMarketId } = body
     const post = await prisma.plazaPost.create({
       data: { userId, type, content, relatedMarketId },
     })

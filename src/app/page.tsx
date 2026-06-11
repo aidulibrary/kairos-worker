@@ -1,6 +1,7 @@
 import { WindLine } from '@/components/WindLine'
 import { GlassCard } from '@/components/GlassCard'
 import { QuickActionMenu } from '@/components/QuickActionMenu'
+import PlazaPublishBtn from '@/components/PlazaPublishBtn'
 import db from '@/lib/db'
 import type { PlazaPost } from '@/lib/data'
 
@@ -121,10 +122,7 @@ export default async function PlazaPage() {
             <h2 style={{ fontFamily: 'var(--font-chinese-heading)', fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--kairo-speak)' }}>风信</h2>
             <WindLine className="flex-1 max-w-64" />
           </div>
-          <button className="px-4 py-2 rounded-[var(--radius-button)] transition-all duration-200"
-            style={{ background: 'var(--kairo-between)', border: '1px solid var(--kairo-emerging)', color: 'var(--kairo-whisper)', fontFamily: 'var(--font-chinese-body)', fontSize: '13px' }}>
-            + 发布风信
-          </button>
+          <PlazaPublishBtn postType="WIND" />
         </div>
         {windPosts.length > 0 ? (
           <div className="grid grid-cols-2 gap-4">
@@ -163,10 +161,7 @@ export default async function PlazaPage() {
             <h2 style={{ fontFamily: 'var(--font-chinese-heading)', fontSize: 'var(--text-h2)', fontWeight: 700, color: 'var(--kairo-speak)' }}>几·坛</h2>
             <WindLine className="max-w-48" />
           </div>
-          <button className="px-4 py-2 rounded-[var(--radius-button)] transition-all duration-200"
-            style={{ background: 'linear-gradient(135deg, var(--kairo-glimmer), var(--kairo-ember))', color: 'oklch(0.15 0.02 75)', fontFamily: 'var(--font-chinese-body)', fontSize: '13px', fontWeight: 600 }}>
-            发起讨论
-          </button>
+          <PlazaPublishBtn postType="FORUM" variant="gradient" />
         </div>
         {forumPosts.length > 0 ? (
           <div className="flex flex-col gap-3">

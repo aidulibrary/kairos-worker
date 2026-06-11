@@ -55,6 +55,7 @@ export function RegisterForm({ identity, identityLabel, onBack }: RegisterFormPr
       <h2 style={{ fontFamily: 'var(--font-chinese-heading)', fontSize: '24px', fontWeight: 700, color: 'var(--kairo-speak)' }}>成为{identityLabel}</h2>
       <div className="flex flex-col gap-3">
         <input type="tel" placeholder="手机号" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={11} style={{ background: 'var(--kairo-between)', border: '1px solid var(--kairo-emerging)', borderRadius: 'var(--radius-input)', padding: '12px 16px', color: 'var(--kairo-speak)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-body)', outline: 'none' }} />
+        {!needsExtras && <input type="text" placeholder="你的名字" value={name} onChange={(e) => setName(e.target.value)} style={{ background: 'var(--kairo-between)', border: '1px solid var(--kairo-emerging)', borderRadius: 'var(--radius-input)', padding: '12px 16px', color: 'var(--kairo-speak)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-body)', outline: 'none' }} />}
         {step !== 'extras' && (
           <div className="flex gap-2">
             <input type="text" placeholder="验证码（试试1234）" value={code} onChange={(e) => setCode(e.target.value)} maxLength={4} className="flex-1" style={{ background: 'var(--kairo-between)', border: '1px solid var(--kairo-emerging)', borderRadius: 'var(--radius-input)', padding: '12px 16px', color: 'var(--kairo-speak)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-body)', outline: 'none' }} />
