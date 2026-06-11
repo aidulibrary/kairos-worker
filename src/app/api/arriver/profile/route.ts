@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import prisma from '@/lib/db'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    if (!userId) return NextResponse.json({ error: '需要userId' }, { status: 400 })
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('kairos_user')?.value
+    if (!userId) return NextResponse.json({ error: '需要先走进来' }, { status: 401 })
+
     const vendor = await prisma.vendor.findUnique({ where: { userId } })
-    // Also get booths with market info
     const booths = await prisma.booth.findMany({
       where: { vendorId: vendor?.id },
       include: { market: true },
@@ -21,8 +22,11 @@ export async function GET(request: Request) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { userId, ...data } = body
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('kairos_user')?.value
+    if (!userId) return NextResponse.json({ error: '需要先走进来' }, { status: 401 })
+
+    const data = await req.json()
     const vendor = await prisma.vendor.findUnique({ where: { userId } })
     if (!vendor) return NextResponse.json({ error: '未找到' }, { status: 404 })
     const updated = await prisma.vendor.update({ where: { id: vendor.id }, data })

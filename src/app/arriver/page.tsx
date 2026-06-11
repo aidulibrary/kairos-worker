@@ -19,7 +19,7 @@ export default function ArriverPage() {
 
   const load = async () => {
     if (!user) return
-    const res = await fetch(`/api/arriver/profile?userId=${user.id}`)
+    const res = await fetch('/api/arriver/profile')
     if (res.ok) {
       const data = await res.json()
       const v = data.vendor || data
@@ -37,7 +37,7 @@ export default function ArriverPage() {
     await fetch('/api/arriver/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, ...form }),
+      body: JSON.stringify(form),
     })
     setEditing(false)
     await load()

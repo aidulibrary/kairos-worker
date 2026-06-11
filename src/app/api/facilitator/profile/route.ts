@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import prisma from '@/lib/db'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    if (!userId) return NextResponse.json({ error: '需要userId' }, { status: 400 })
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('kairos_user')?.value
+    if (!userId) return NextResponse.json({ error: '需要先走进来' }, { status: 401 })
+
     const service = await prisma.service.findUnique({ where: { userId } })
     return NextResponse.json(service)
   } catch {

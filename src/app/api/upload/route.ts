@@ -1,14 +1,10 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { v4 as uuid } from 'uuid'
 
-const R2 = new S3Client({
-  region: 'auto',
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
-  },
-})
+function getR2() {
+  const r2 = (globalThis as any).R2 || (process as any).env?.R2
+  if (!r2) throw new Error('R2 binding not available')
+  return r2
+}
 
 export async function POST(req: Request) {
   try {
@@ -16,18 +12,19 @@ export async function POST(req: Request) {
     const file = formData.get('file') as File
     if (!file) return Response.json({ error: 'No file' }, { status: 400 })
 
-    const key = `uploads/${uuid()}-${file.name}`
-    const buffer = Buffer.from(await file.arrayBuffer())
+    const ext = file.name.split('.').pop() || 'bin'
+    const key = `uploads/${uuid()}.${ext}`
+    const buffer = await file.arrayBuffer()
 
-    await R2.send(new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET || 'kairos',
-      Key: key,
-      Body: buffer,
-      ContentType: file.type,
-    }))
+    const r2 = getR2()
+    await r2.put(key, buffer, {
+      httpMetadata: { contentType: file.type || 'application/octet-stream' },
+    })
+
+    const publicUrl = process.env.R2_PUBLIC_URL || 'https://pub-125ff6c969c14c20b888e94db8e2979a.r2.dev'
 
     return Response.json({
-      url: `${process.env.R2_PUBLIC_URL}/${key}`,
+      url: `${publicUrl}/${key}`,
       key,
       name: file.name,
       size: file.size,

@@ -17,7 +17,7 @@ export default function FacilitatorPage() {
 
   const load = async () => {
     if (!user) return
-    const res = await fetch(`/api/facilitator/profile?userId=${user.id}`)
+    const res = await fetch('/api/facilitator/profile')
     if (res.ok) setServices([await res.json()])
   }
 

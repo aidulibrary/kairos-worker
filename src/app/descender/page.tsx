@@ -32,7 +32,7 @@ export default function DescenderPage() {
     await fetch('/api/descender/reserve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ marketId, userId }),
+      body: JSON.stringify({ marketId }),
     })
     setReserving(null)
     alert('预约已发出——等待主创确认。')
